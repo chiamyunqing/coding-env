@@ -27,13 +27,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ onChange, initialValue }) => {
     const unformatted = editorRef.current.getModel().getValue();
 
     //format the value
-    const formatted = prettier.format(unformatted, {
-      parser: "babel",
-      plugins: [parser],
-      useTabs: false,
-      semi: true,
-      singleQuote: false,
-    }).replace(/\n$/, ''); //don't want the new line added by prettier
+    const formatted = prettier
+      .format(unformatted, {
+        parser: "babel",
+        plugins: [parser],
+        useTabs: false,
+        semi: true,
+        singleQuote: false,
+      })
+      .replace(/\n$/, ""); //don't want the new line added by prettier
 
     //set the formatted value back to editor
     editorRef.current.setValue(formatted);
@@ -52,7 +54,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ onChange, initialValue }) => {
         value={initialValue}
         theme="dark"
         language="javascript"
-        height="90vh"
+        height="100%"
         options={{
           wordWrap: "on",
           minimap: {

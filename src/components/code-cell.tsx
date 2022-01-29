@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import "./code-cell.css";
+import { useEffect } from "react";
 import CodeEditor from "./code-editor";
 import Preview from "./preview";
-import bundle from "../bundler";
 import Resizable from "./resizable";
 import { Cell } from "../state";
 import { useActions } from "../hooks/use-actions";
+import { useTypedSelector } from "../hooks/use-typed-selector";
 
 //convert local state to use redux
 interface CodeCellProps {
@@ -14,21 +15,26 @@ interface CodeCellProps {
 //1 code editor + 1 preview
 //input cell is what user is actually typing in code editor
 const CodeCell: React.FC<CodeCellProps> = ({ cell }) => {
-  const [code, setCode] = useState("");
-  const [err, setErr] = useState("");
-  const { updateCell } = useActions(); //use this dispatcher to update cell
+  const { updateCell, createBundle } = useActions(); //use this dispatcher to update cell
+  //get the bundle object from store
+  const bundle = useTypedSelector((state) => state.bundles[cell.id]);
 
   //useEffect if returns a function, func will run the next time it is called
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      const output = await bundle(cell.content); //returns an object
-      setCode(output.code);
-      setErr(output.err);
-      return () => {
-        clearTimeout(timer);
-      };
-    }, 1000);
-  }, [cell.content]);
+    if (!bundle) {
+      createBundle(cell.id, cell.content);
+      return;
+    }
+
+    setTimeout(async () => {
+      //call action creator, stored in redux store
+
+      //create bundle is same function
+      createBundle(cell.id, cell.content);
+    }, 750);
+
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cell.content, cell.id, createBundle]);
 
   //iframe to embed html doc into another html doc
   //sandbox iframed prevents child and parent window to communicate
@@ -47,7 +53,17 @@ const CodeCell: React.FC<CodeCellProps> = ({ cell }) => {
             onChange={(value) => updateCell(cell.id, value)}
           />
         </Resizable>
-        <Preview code={code} err={err} />
+        <div className="progress-wrapper">
+          {!bundle || bundle.loading ? (
+            <div className="progress-cover">
+              <progress className="progress is-small is-primary" max="100">
+                Loading
+              </progress>
+            </div>
+          ) : (
+            <Preview code={bundle.code} err={bundle.err} />
+          )}
+        </div>
       </div>
     </Resizable>
   );

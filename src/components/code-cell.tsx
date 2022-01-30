@@ -6,6 +6,7 @@ import Resizable from "./resizable";
 import { Cell } from "../state";
 import { useActions } from "../hooks/use-actions";
 import { useTypedSelector } from "../hooks/use-typed-selector";
+import { useCumulativeCode } from "../hooks/use-cumulative-code";
 
 //convert local state to use redux
 interface CodeCellProps {
@@ -18,23 +19,26 @@ const CodeCell: React.FC<CodeCellProps> = ({ cell }) => {
   const { updateCell, createBundle } = useActions(); //use this dispatcher to update cell
   //get the bundle object from store
   const bundle = useTypedSelector((state) => state.bundles[cell.id]);
+  const cumulativeCode = useCumulativeCode(cell.id);
 
   //useEffect if returns a function, func will run the next time it is called
   useEffect(() => {
     if (!bundle) {
-      createBundle(cell.id, cell.content);
+      createBundle(cell.id, cumulativeCode);
       return;
     }
 
-    setTimeout(async () => {
+    const timer = setTimeout(async () => {
       //call action creator, stored in redux store
 
       //create bundle is same function
-      createBundle(cell.id, cell.content);
+      createBundle(cell.id, cumulativeCode);
     }, 750);
-
+    return () => {
+      clearTimeout(timer);
+    };
     //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cell.content, cell.id, createBundle]);
+  }, [cumulativeCode, cell.id, createBundle]);
 
   //iframe to embed html doc into another html doc
   //sandbox iframed prevents child and parent window to communicate
